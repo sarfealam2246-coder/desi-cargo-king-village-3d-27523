@@ -1,0 +1,43 @@
+name: Build Native Unity 3D Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Activate Unity Personal License
+        uses: game-ci/activate-unity-license@v1
+        with:
+          license: personal
+          username: ${{ secrets.UNITY_EMAIL }}
+          password: ${{ secrets.UNITY_PASSWORD }}
+
+      - name: Build Unity 3D Android APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          unityVersion: 2022.3.20f1
+          androidAppBundle: false
+          buildMethod: AutoBuildScene.PerformAndroidBuild
+
+      - name: Publish Unity 3D APK to Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-${{ github.run_number }}
+          name: "Unity 3D Android APK v1.0.0"
+          files: build/Android/*.apk
+          draft: false
+          prerelease: false
